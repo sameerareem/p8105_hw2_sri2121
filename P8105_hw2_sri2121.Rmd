@@ -9,3 +9,100 @@ output: github_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+Loading libraries
+
+```{r}
+library(tidyverse)
+library(readxl)
+```
+
+
+## Problem 1
+
+Loading the CSV file
+
+```{r}
+subway_df = 
+  read_csv(file = "NYC_Transit_Subway_Entrance_And_Exit_Data.csv",
+  col_types = cols(Route8 = "c", Route9 = "c", Route10 = "c", Route11 = "c")) |>
+  janitor::clean_names() |> 
+  select(line, station_name, station_latitude, station_longitude, starts_with("route"), entry, vending, entrance_type, ada) |> 
+  mutate(
+    entry = case_match(
+      entry, 
+      "NO" ~ 0,
+      "YES" ~ 1,
+    )
+  )
+```
+
+Questions:
+
+1. How many distinct stations are there? Note that stations are identified both by name and by line (e.g. 125th St 8th Avenue; 125st Broadway; 125st Lenox); the distinct function may be useful here.
+
+```{r}
+subway_df |> 
+  select(station_name, line) |> 
+  distinct()
+```
+
+
+2. How many stations are ADA compliant?
+
+```{r}
+subway_df |> 
+  filter(ada == "TRUE") |> 
+  select(station_name, line) |> 
+  distinct()
+```
+
+
+3. What proportion of station entrances / exits without vending allow entrance?
+
+```{r}
+subway_df |> 
+  filter(vending == "NO") |> 
+  pull(entry) |> 
+  mean()
+```
+
+Reformat data so that route number and route name are distinct variables. 
+How many distinct stations serve the A train? 
+Of the stations that serve the A train, how many are ADA compliant?
+
+```{r}
+subway_df |> 
+  pivot_longer(
+    route1:route11,
+    names_to = "route_num",
+    values_to = "route") |> 
+  filter(route == "A") |> 
+  select(station_name, line) |> 
+  distinct()
+
+subway_df |> 
+  pivot_longer(
+    route1:route11,
+    names_to = "route_num",
+    values_to = "route") |> 
+  filter(route == "A", ada == TRUE) |> 
+  select(station_name, line) |> 
+  distinct()
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
