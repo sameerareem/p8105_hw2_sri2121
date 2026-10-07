@@ -143,6 +143,66 @@ Professor Trash Wheel collected a total of `r sum(proftrashwheel_df$weight_tons)
 
 Gwynnda collected `r gwynnda_df |> filter(month == "June", year == "2022") |> pull(cigarette_butts) |> sum()` cigarette butts in June 2022.
 
+## Problem 3
+
+Importing and tidying the baseline data
+
+```{r}
+baseline_df = read_csv("data/data_mci/MCI_baseline.csv",
+                       skip = 1, 
+                       na = c("", "NA", ".")) |> 
+  janitor::clean_names() |> 
+  mutate(sex = as.factor(sex)) |> 
+  mutate(apoe4 = as.factor(apoe4)) 
+```
+Removing participants that do not meet the stated inclusion criteria
+
+```{r}
+baseline_df_clean = baseline_df |> 
+  filter(!is.na(age_at_onset)) |> 
+  filter(age_at_onset > current_age)
+```
+
+Discussion:
+
+The first row is a description of the columns and the second row is the actual 
+column name so I skipped the first row while importing.
+Missing values have been recorded as ".", "NA" or a blank space so that has been
+accounted for while importing.
+The dataframe consists of 6 columns, namely: `r colnames(baseline_df)`. 
+"current_age" is the age at the study baseline. "education" is years of education. 
+"sex" is coded as 1 for male and 0 for female. "apoe4" is coded as 1 for apoe4 carrier and 0 for apoe4 non-carrier.
+Sex and APOE4 carrier status are stored as numerical data types so I've changed them to factors.
+
+The number of participants recruited is `r nrow(baseline_df)`.
+
+The number of participants that develop MCI is `r nrow(baseline_df_clean)`.
+
+The average baseline age is `r mean(baseline_df_clean$current_age, 2)` years.
+
+To calculate proportion of women in the study that are APOE carriers: 
+
+```{r}
+carrier_women = baseline_df_clean |> 
+  filter(sex == 0, apoe4 == 1)
+
+total_women = baseline_df_clean |> 
+  filter(sex == 0)
+
+women_prop = nrow(carrier_women) / nrow(total_women)
+```
+
+Proportion of women in the study that are APOE carriers is `r women_prop`
+
+
+Reading the amyloid dataframe
+
+```{r}
+amyloid_df = read_csv("data/data_mci/mci_amyloid.csv",
+                       skip = 1, 
+                       na = c("", "NA", ".")) |> 
+  janitor::clean_names()
+```
 
 
 
