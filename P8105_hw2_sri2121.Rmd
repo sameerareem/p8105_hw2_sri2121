@@ -23,7 +23,7 @@ Loading the CSV file
 
 ```{r}
 subway_df = 
-  read_csv(file = "NYC_Transit_Subway_Entrance_And_Exit_Data.csv",
+  read_csv(file = "data/NYC_Transit_Subway_Entrance_And_Exit_Data.csv",
   col_types = cols(Route8 = "c", Route9 = "c", Route10 = "c", Route11 = "c")) |>
   janitor::clean_names() |> 
   select(line, station_name, station_latitude, station_longitude, starts_with("route"), entry, vending, entrance_type, ada) |> 
@@ -90,6 +90,58 @@ subway_df |>
   distinct()
 ```
 
+## Problem 2
+
+Importing, cleaning and combining data
+
+```{r}
+mrtrashwheel_df = read_excel("data/202610 Trash Wheel Collection Data.xlsx",
+                      sheet = "Mr. Trash Wheel",
+                      skip = 1,
+                      range = cell_cols("A:N")) |> 
+  janitor::clean_names() |> 
+  filter(!is.na(dumpster)) |> 
+  mutate(sports_balls = as.integer(round(sports_balls))) |> 
+  mutate(trash_wheel = "MrTrashWheel") |> 
+  dplyr::relocate(trash_wheel) |> 
+  mutate(year = as.integer(year))
+
+proftrashwheel_df = read_excel("data/202610 Trash Wheel Collection Data.xlsx",
+                      sheet = "Professor Trash Wheel",
+                      skip = 1,
+                      range = cell_cols("A:M")) |> 
+  janitor::clean_names() |> 
+  filter(!is.na(dumpster)) |> 
+  mutate(trash_wheel = "ProfTrashWheel") |> 
+  dplyr::relocate(trash_wheel) |> 
+  mutate(year = as.integer(year)) |> 
+  mutate(plastic_bottles = as.numeric(plastic_bottles))
+
+gwynnda_df = read_excel("data/202610 Trash Wheel Collection Data.xlsx",
+                      sheet = "Gwynnda the Good Wheel of the W",
+                      skip = 1,
+                      range = cell_cols("A:L")) |> 
+  janitor::clean_names() |> 
+  filter(!is.na(dumpster)) |> 
+  mutate(trash_wheel = "Gwynnda") |> 
+  dplyr::relocate(trash_wheel) |> 
+  mutate(year = as.integer(year))
+
+trash_wheel_df = bind_rows(mrtrashwheel_df, proftrashwheel_df, gwynnda_df)
+```
+
+The combined Trash Wheel dataset has `r nrow(trash_wheel_df)` observations and `r ncol(trash_wheel_df)` variables, drawn from Mr. Trash Wheel
+(`r sum(trash_wheel_df$trash_wheel == "MrTrashWheel")` hauls), Professor Trash Wheel
+(`r sum(trash_wheel_df$trash_wheel == "ProfTrashWheel")` hauls), and Gwynnda
+(`r sum(trash_wheel_df$trash_wheel == "Gwynnda")` hauls). Key variables include `trash_wheel`
+(which wheel collected the trash), `dumpster`, `date`, `weight_tons`,
+`volume_cubic_yards`, and counts of items such as `plastic_bottles`,
+`cigarette_butts`, `wrappers`, and `sports_balls`. Sports balls and glass bottles
+are only recorded for Mr. Trash Wheel, so they are missing for the other two.
+
+Professor Trash Wheel collected a total of `r sum(proftrashwheel_df$weight_tons)` tons of trash.
+
+Gwynnda collected `r gwynnda_df |> filter(month == "June", year == "2022") |> pull(cigarette_butts) |> sum()` cigarette butts in June 2022.
 
 
 
