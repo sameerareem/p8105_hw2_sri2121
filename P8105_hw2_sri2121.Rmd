@@ -194,16 +194,57 @@ women_prop = nrow(carrier_women) / nrow(total_women)
 
 Proportion of women in the study that are APOE carriers is `r women_prop`
 
-
-Reading the amyloid dataframe
+Reading and tidying the amyloid dataframe
 
 ```{r}
 amyloid_df = read_csv("data/data_mci/mci_amyloid.csv",
                        skip = 1, 
-                       na = c("", "NA", ".")) |> 
-  janitor::clean_names()
+                       na = c("", "NA", ".", "Na")) |> 
+   janitor::clean_names() |> 
+  rename(id = study_id)
+```
+The first row is a description of the columns and the second row is the actual 
+column name so I skipped the first row while importing.
+Missing values have been recorded as ".", "NA", "Na" or a blank space so that has been
+accounted for while importing.
+The dataframe consists of 6 columns, namely: `r colnames(amyloid_df)`. 
+I renamed the column "study_id" to just "id" so it could match the baseline df.
+I will be reorganising the dataframe to a longer format so it's easier to understand and easier to join with the baseline df later.
+
+```{r}
+amyloid_df = amyloid_df |> 
+  pivot_longer(
+    time_2:time_8,
+    names_to = "visit",
+    values_to = "amyloid_value")
 ```
 
+
+
+To check whether some participants appear in only the baseline or amyloid datasets:
+
+```{r}
+baseline_only = anti_join(baseline_df, amyloid_df, by = "id")
+
+amyloid_only = anti_join(amyloid_df, baseline_df, by = "id")
+```
+
+`r nrow(baseline_only)` participants occur in only baseline df and not amyloid df. 
+`r length(unique(amyloid_only$id))` participants occur in only amyloid df and not baseline df.
+
+Combining the demographic and biomarker datasets so that only participants who appear in both datasets are retained:
+
+```{r}
+mci_data = inner_join(baseline_df_clean, amyloid_df, by = "id")
+```
+
+The resulting dataset has `r nrow(mci_data)` rows, 4 per participant. So `r nrow(mci_data)/4` participants in total have been retained.
+
+Exporting the result as a CSV to my data directory:
+
+```{r}
+write_csv(mci_data, "data/data_mci/mci_merged.csv")
+```
 
 
 
