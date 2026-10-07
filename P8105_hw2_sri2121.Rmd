@@ -38,12 +38,13 @@ subway_df =
 
 Questions:
 
-1. How many distinct stations are there? Note that stations are identified both by name and by line (e.g. 125th St 8th Avenue; 125st Broadway; 125st Lenox); the distinct function may be useful here.
+1. How many distinct stations are there? 
 
 ```{r}
 subway_df |> 
   select(station_name, line) |> 
-  distinct()
+  distinct() |> 
+  nrow()
 ```
 
 
@@ -53,7 +54,8 @@ subway_df |>
 subway_df |> 
   filter(ada == "TRUE") |> 
   select(station_name, line) |> 
-  distinct()
+  distinct() |> 
+  nrow()
 ```
 
 
